@@ -1,189 +1,266 @@
-🧑‍💻 BU Forum – Outdoor Community Platform
+# 🧑‍💻 HKBU Forum – Outdoor Community Platform
 
-A web-based community platform built with Node.js, Express, and SQLite.
+![Node.js](https://img.shields.io/badge/Node.js-Backend-green)
+![Express](https://img.shields.io/badge/Express.js-Framework-black)
+![SQLite](https://img.shields.io/badge/SQLite-Database-blue)
+![Status](https://img.shields.io/badge/Project-Student%20Project-orange)
 
-This project combines a traditional community discussion forum with outdoor activity tools, allowing users to share hiking experiences, explore hiking routes, organize events, and communicate with other community members.
+A web-based **community forum and outdoor activity platform** built with **Node.js, Express, and SQLite**.
 
-It demonstrates full-stack web development including backend APIs, database integration, server-side rendering, and interactive front-end features.
+The system combines a **discussion forum**, **hiking exploration tools**, and an **event calendar** into a single platform designed for university students to share outdoor experiences and organize activities.
 
-📌 Features
-Community Forum System
+This project demonstrates **full-stack web development**, including backend APIs, database integration, server-side rendering, and interactive map features.
 
-The platform includes a full discussion system where users can:
+---
 
-User registration and login
+# 📸 Screenshots
 
-Create and manage discussion posts
+## 🌗 Light Mode / Dark Mode
 
-Reply to existing posts
+The platform supports both **light mode and dark mode** for better user experience.
 
-Multiple discussion boards
+![Light Mode](assets/light-mode.png)
 
-Admin management system
+![Dark Mode](assets/dark-mode.png)
 
-Simple and responsive interface
+---
 
-Users can share hiking experiences, discuss routes, and participate in community conversations.
+## 🏠 Forum Homepage
 
-🥾 Hiking Exploration Module
+Community homepage with multiple discussion boards.
 
-The system includes an interactive hiking map where users can explore hiking routes and checkpoints.
+Users can browse topics, create posts, and participate in discussions.
+
+![Forum Homepage](assets/forum-homepage.png)
+
+---
+
+## ✏️ Create New Post
+
+Users can create discussion posts and optionally add events to the calendar.
+
+![Create Post](assets/create-post.png)
+
+---
+
+## 🥾 Hiking Map
+
+Interactive hiking map built using **Leaflet + OpenStreetMap**.
+
+Users can explore hiking locations across Hong Kong.
+
+![Hiking Map](assets/hiking-map.png)
+
+---
+
+## 📍 Hiking Checkpoints & Google Maps Navigation
+
+Each hiking location includes:
+
+- Hiking checkpoint system
+- Navigation to trail starting point
+- Google Maps integration for route navigation
+
+![Hiking Navigation](assets/hiking-navigation.png)
+
+---
+
+## 🗺 Hiking Route Explorer
+
+Users can explore official hiking trails such as:
+
+- MacLehose Trail
+- Lantau Trail
+- Hong Kong Trail
+- Wilson Trail
+
+Each trail includes route information and navigation support.
+
+![Hiking Routes](assets/hiking-routes.png)
+
+---
+
+## 🏔 Hiking Community Posts
+
+Users can share hiking experiences and interact with the community.
+
+![Hiking Community](assets/hiking-community.png)
+
+---
+
+## 📅 Event Calendar
+
+Community event calendar where users can organize activities.
 
 Features include:
 
-Interactive hiking map with route visualization
+- Monthly calendar view
+- Event publishing
+- Export events to **ICS calendar format**
 
-View hiking trails and route checkpoints
+Users can import events into:
 
-Mark checkpoints as completed (hiking check-in system)
+- Apple Calendar
+- Google Calendar
+- Outlook
 
-Navigate to trail start points or checkpoints via Google Maps
+![Event Calendar](assets/event-calendar.png)
 
-Discuss specific hiking routes through the forum
+---
 
-This module allows the platform to function not only as a forum but also as an outdoor exploration tool for hikers.
+# 📌 Key Features
 
-📅 Activity Calendar
+## 🧑‍🤝‍🧑 Community Forum
 
-The platform includes a community activity calendar for organizing outdoor events.
+- User registration and login
+- Create and manage discussion posts
+- Reply to posts
+- Multiple discussion boards
+- Admin management system
 
-Features include:
+---
 
-Publish hiking or community events
+## 🥾 Hiking Exploration System
 
-View upcoming activities on the calendar
+- Interactive hiking map
+- Hiking checkpoint tracking
+- Google Maps navigation integration
+- Hiking route explorer
+- Community hiking posts
 
-Export events to personal device calendars using the ICS format
+---
 
-Users can download event files and add them to their own calendar applications such as Apple Calendar, Google Calendar, or Outlook.
+## 📅 Activity Calendar
 
-💬 Private Messaging
+- Event publishing
+- Monthly calendar view
+- Export to ICS calendar format
+- Integration with device calendars
 
-The platform also provides a private messaging system that allows users to communicate directly.
+---
 
-Features include:
+## 💬 Private Messaging (Planned)
 
-Send private messages to other users
+Future versions will include a **private messaging system** allowing users to communicate directly within the platform.
 
-Inbox for received messages
+---
 
-Direct communication for coordinating hiking activities
+# 🏗 Tech Stack
 
-🏗️ Tech Stack
-Backend
+## Backend
 
-Node.js
+- Node.js
+- Express.js
 
-Express.js
+## Frontend
 
-Frontend
+- HTML
+- CSS
+- JavaScript
+- EJS Template Engine
 
-HTML
+## Database
 
-CSS
+- SQLite
 
-JavaScript
+## Map Technology
 
-EJS Template Engine
+- Leaflet.js
+- OpenStreetMap
+- Google Maps Navigation
 
-Database
+## Development Tools
 
-SQLite
+- Git
+- GitHub
 
-Map Tools
+---
 
-Leaflet
+# 📂 Project Structure
 
-Google Maps
-
-Development Tools
-
-Git
-
-GitHub
-
-📂 Project Structure
 bu-forum-system
 │
-├── public/        # Static assets (CSS, JS, hiking map)
-├── routes/        # Express routes
-├── views/         # EJS templates
+├── public/ # Static assets (CSS, JS, maps)
+├── routes/ # Express routes
+├── views/ # EJS templates
 │
-├── db.js          # Database connection
-├── server.js      # Main server
-├── i18n.js        # Internationalization support
-├── package.json   # Dependencies
-└── setup.sh       # Setup script
-🚀 Getting Started
-1 Clone the repository
+├── db.js # Database connection
+├── server.js # Main server
+├── i18n.js # Internationalization support
+├── package.json # Dependencies
+└── setup.sh # Setup script
+
+---
+
+# 🚀 Getting Started
+
+### 1 Clone repository
+
 git clone https://github.com/Wilson-M-A/bu-forum-system.git
 
-2 Enter project directory
+### 2 Enter project directory
+
 cd bu-forum-system
 
-3 Install dependencies
+### 3 Install dependencies
+
 npm install
 
-4 Run the server
+### 4 Run server
+
 node server.js
 
-5 Open in browser
+### 5 Open in browser
+
 http://localhost:3000
 
-🧪 Example Use Cases
+---
+
+# 🧪 Example Use Cases
 
 Users can:
 
-Create discussion posts about hiking experiences
+- Discuss hiking routes in community forums
+- Share hiking experiences
+- Explore hiking trails on the interactive map
+- Navigate to hiking locations via Google Maps
+- Organize outdoor activities through the event calendar
+- Export events to personal calendars
 
-Reply to other users and share route tips
+---
 
-Explore hiking routes using the interactive map
+# 🔮 Future Improvements
 
-Navigate to hiking trail start points
+- 🤖 AI-powered post summarization
+- 🤖 AI reply suggestions
+- 👤 User profile system
+- 💬 Private messaging system
+- 🔎 Smart search
+- ☁️ Cloud deployment
+- 📱 Improved mobile UI
 
-Organize hiking activities using the calendar
+---
 
-Export events to their personal calendars
+# 🌍 Deployment (Future)
 
-Send private messages to coordinate with other hikers
+The platform can be deployed using:
 
-🔮 Future Improvements
+- Render
+- Railway
+- Vercel
 
-Planned improvements include:
+---
 
-🤖 AI-powered post summarization
+# 👨‍💻 Author
 
-🤖 AI reply suggestions
+**Mingyang Ma**
 
-👤 User profile system
-
-🔎 Smart search system
-
-🌐 Cloud deployment
-
-📱 Improved UI/UX
-
-📊 Hiking statistics and activity tracking
-
-🌍 Deployment (Future)
-
-The application can be deployed to cloud platforms such as:
-
-Render
-
-Railway
-
-Vercel (frontend)
-
-👨‍💻 Author
-
-Mingyang Ma
-
-Computer Science Student
+Computer Science Student  
 Hong Kong Baptist University
 
-GitHub
+GitHub  
 https://github.com/Wilson-M-A
 
-⭐ If you like this project, feel free to give it a star ⭐ on GitHub.
+---
+
+⭐ If you like this project, feel free to give it a **star ⭐ on GitHub**.
