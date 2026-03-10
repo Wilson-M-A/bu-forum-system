@@ -1,0 +1,7 @@
+node_modules/
+forum.db
+forum.db-shm
+forum.db-wal
+.env
+.DS_Store
+
