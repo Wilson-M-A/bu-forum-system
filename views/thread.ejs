@@ -1,0 +1,70 @@
+<%- include('partials/header', { title, pageTitle, sidebarBoards }) %>
+<div class="thread-container">
+  <div class="breadcrumb"><a href="/"><%= t('thread.home') %></a><span class="sep">›</span><a href="/board/<%= thread.board_id %>"><%= thread.board_name %></a><span class="sep">›</span><span><%= thread.title.length>40?thread.title.substring(0,40)+'…':thread.title %></span></div>
+  <div class="thread-header-card">
+    <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:10px">
+      <div style="flex:1">
+        <% if (thread.is_pinned) { %><span class="badge badge-pin" style="margin-right:6px"><%= t('board.pinned') %></span><% } %>
+        <% if (thread.is_locked) { %><span class="badge badge-lock" style="margin-right:6px"><%= t('board.locked') %></span><% } %>
+        <h1 class="thread-heading"><%= thread.title %></h1>
+      </div>
+      <% if (user && user.is_admin) { %>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <form method="POST" action="/admin/threads/pin/<%= thread.id %>" style="display:inline"><button class="btn btn-ghost btn-sm"><%= thread.is_pinned?t('thread.unpin'):t('thread.pin') %></button></form>
+          <form method="POST" action="/admin/threads/lock/<%= thread.id %>" style="display:inline"><button class="btn btn-ghost btn-sm"><%= thread.is_locked?t('thread.unlock'):t('thread.lock') %></button></form>
+          <form method="POST" action="/admin/threads/delete/<%= thread.id %>" style="display:inline" onsubmit="return confirm('<%= t('thread.delete_confirm') %>')"><button class="btn btn-danger btn-sm"><%= t('thread.delete') %></button></form>
+        </div>
+      <% } %>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);display:flex;gap:16px;flex-wrap:wrap">
+      <span>👤 <%= thread.username %></span><span>📅 <span data-time="<%= thread.created_at %>"><%= thread.created_at %></span></span><span>👁 <%= thread.views %><%= t('thread.views') %></span><span>💬 <%= replies.length %><%= t('thread.replies') %></span>
+    </div>
+  </div>
+  <div class="post-card">
+    <div class="post-author-bar">
+      <div class="avatar avatar-lg" style="background:<%= thread.avatar_color %>"><%= thread.username.charAt(0).toUpperCase() %></div>
+      <div><div class="author-name"><%= thread.username %> <% if(thread.is_admin){%><span class="badge badge-admin">Admin</span><%}%></div><div class="author-meta"><%= t('thread.posts_label') %><%= thread.post_count %> · <%= t('sidebar.student_tag') %></div></div>
+      <span style="margin-left:auto;font-size:11px;color:var(--text-muted)" data-time="<%= thread.created_at %>"><%= thread.created_at %></span>
+    </div>
+    <div class="post-content"><%- thread.content.replace(/\n/g,'<br>') %></div>
+    <div class="post-footer-bar">
+      <% if (user) { %>
+        <button class="react-btn <%= userLiked?'active':'' %>" data-action="like-thread" data-id="<%= thread.id %>">👍 <span class="like-count"><%= thread.like_count %></span></button>
+        <button class="react-btn <%= userFavorited?'fav-active':'' %>" data-action="favorite" data-id="<%= thread.id %>">⭐ <span><%= userFavorited?t('thread.saved'):t('thread.save') %></span></button>
+      <% } else { %>
+        <span style="font-size:12px;color:var(--text-muted)">👍 <%= thread.like_count %> · <a href="/login"><%= t('thread.login_react') %></a></span>
+      <% } %>
+    </div>
+  </div>
+  <% if (replies.length > 0) { %>
+    <div style="font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin:20px 0 10px">💬 <%= replies.length %><%= t('thread.replies_title') %></div>
+    <% replies.forEach((r,i) => { %>
+      <div class="post-card" id="reply-<%= r.id %>">
+        <div class="post-author-bar">
+          <div class="avatar" style="background:<%= r.avatar_color %>"><%= r.username.charAt(0).toUpperCase() %></div>
+          <div><div class="author-name"><%= r.username %></div><div class="author-meta"><%= t('thread.posts_label') %><%= r.post_count %></div></div>
+          <span style="margin-left:auto;font-size:11px;color:var(--text-muted)">#<%= i+1 %> · <span data-time="<%= r.created_at %>"><%= r.created_at %></span></span>
+        </div>
+        <div class="post-content"><%- r.content.replace(/\n/g,'<br>') %></div>
+        <div class="post-footer-bar">
+          <% if (user) { %><button class="react-btn <%= likedReplies.includes(r.id)?'active':'' %>" data-action="like-reply" data-id="<%= r.id %>">👍 <span class="like-count"><%= r.like_count %></span></button><% } else { %><span style="font-size:12px;color:var(--text-muted)">👍 <%= r.like_count %></span><% } %>
+        </div>
+      </div>
+    <% }) %>
+  <% } %>
+  <div id="end" class="reply-box">
+    <% if (!user) { %>
+      <h3><%= t('thread.join_disc') %></h3>
+      <p style="color:var(--text-muted);font-size:13px"><a href="/login"><%= t('nav.login') %></a><%= t('thread.or') %><a href="/register"><%= t('nav.register') %></a><%= t('thread.to_reply') %></p>
+    <% } else if (thread.is_locked) { %>
+      <p style="color:var(--text-muted)"><%= t('thread.locked_msg') %></p>
+    <% } else { %>
+      <h3><%= t('thread.post_reply') %></h3>
+      <form method="POST" action="/reply/<%= thread.id %>">
+        <div class="form-group"><textarea name="content" placeholder="<%= t('thread.write_reply') %>" rows="4" required></textarea></div>
+        <button type="submit" class="btn btn-brand"><%= t('thread.submit_reply') %></button>
+      </form>
+    <% } %>
+  </div>
+</div>
+<%- include('partials/footer') %>

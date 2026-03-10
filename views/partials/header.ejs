@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title + ' · ' : '' %>HKBU Forum</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="app-layout">
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">🎓 <%= t('sidebar.title') %><em><%= t('sidebar.subtitle') %></em></div>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label"><%= t('nav.navigation') %></span>
+    <a href="/" class="sidebar-link <%= typeof activePage!=='undefined'&&activePage==='home'?'active':'' %>"><span class="ico">🏠</span><span><%= t('nav.home') %></span></a>
+    <% if (user) { %><a href="/my-favorites" class="sidebar-link <%= typeof activePage!=='undefined'&&activePage==='favorites'?'active':'' %>"><span class="ico">⭐</span><span><%= t('nav.favorites') %></span></a><% } %>
+    <a href="/calendar" class="sidebar-link <%= typeof activePage!=='undefined'&&activePage==='calendar'?'active':'' %>"><span class="ico">📅</span><span><%= t('nav.calendar') %></span></a>
+    <a href="/hiking-map" class="sidebar-link <%= typeof activePage!=='undefined'&&activePage==='hiking'?'active':'' %>"><span class="ico">🗺️</span><span><%= t('nav.hiking_map') %></span></a>
+    <% if (user) { %><a href="/messages" class="sidebar-link <%= typeof activePage!=='undefined'&&activePage==='messages'?'active':'' %>"><span class="ico">💬</span><span><%= t('nav.messages') %></span><span class="cnt msg-unread-badge" style="display:none"></span></a><% } %>
+  </div>
+  <div class="sidebar-section">
+    <span class="sidebar-label"><%= t('nav.boards') %></span>
+    <% if (typeof sidebarBoards !== 'undefined') { sidebarBoards.forEach(b => { %>
+      <a href="/board/<%= b.id %>" class="sidebar-link"><span class="ico"><%= b.icon %></span><span><%= b.name %></span><span class="cnt"><%= b.thread_count %></span></a>
+    <% }) } %>
+  </div>
+  <% if (user && user.is_admin) { %>
+  <div class="sidebar-section">
+    <span class="sidebar-label"><%= t('nav.admin') %></span>
+    <a href="/admin" class="sidebar-link"><span class="ico">⚙️</span><span><%= t('nav.dashboard') %></span></a>
+  </div>
+  <% } %>
+  <div class="sidebar-footer">
+    <% if (user) { %>
+    <div class="user-area">
+      <div class="avatar" style="background:<%= user.avatar_color %>"><%= user.username.charAt(0).toUpperCase() %></div>
+      <div style="flex:1;min-width:0"><div class="user-name"><%= user.username %></div><div class="user-tag"><%= t('sidebar.student_tag') %></div></div>
+      <a href="/logout" style="font-size:16px;color:var(--text-muted)" title="<%= t('nav.logout') %>">🚪</a>
+    </div>
+    <% } else { %>
+    <div style="display:flex;gap:6px;padding:4px">
+      <a href="/login" class="btn btn-ghost btn-sm" style="flex:1;justify-content:center"><%= t('nav.login') %></a>
+      <a href="/register" class="btn btn-brand btn-sm" style="flex:1;justify-content:center"><%= t('nav.register') %></a>
+    </div>
+    <% } %>
+  </div>
+</div>
+<div class="main-content">
+  <div class="content-header">
+    <h1><%= typeof pageTitle!=='undefined'?pageTitle:'HKBU Forum' %></h1>
+    <div class="header-actions">
+      <div class="lang-switcher">
+        <button class="lang-btn" onclick="this.parentElement.classList.toggle('open')">🌐 <span class="lang-current"><%= lang==='zh-CN'?'简中':lang==='zh-TW'?'繁中':'EN' %></span></button>
+        <div class="lang-dropdown">
+          <a href="/set-lang/zh-CN" class="lang-option <%= lang==='zh-CN'?'active':'' %>">简体中文</a>
+          <a href="/set-lang/zh-TW" class="lang-option <%= lang==='zh-TW'?'active':'' %>">繁體中文</a>
+          <a href="/set-lang/en" class="lang-option <%= lang==='en'?'active':'' %>">English</a>
+        </div>
+      </div>
+      <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+      <% if (user) { %><div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted)"><div class="avatar" style="background:<%= user.avatar_color %>;width:26px;height:26px;font-size:11px"><%= user.username.charAt(0).toUpperCase() %></div><%= user.username %></div><% } %>
+    </div>
+  </div>
+  <div class="content-body">

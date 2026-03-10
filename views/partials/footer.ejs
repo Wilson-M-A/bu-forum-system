@@ -1,0 +1,36 @@
+  </div>
+</div>
+<div class="right-panel">
+  <div class="panel-section">
+    <div class="panel-title"><%= t('panel.online') %></div>
+    <div style="font-size:13px;color:var(--text-muted)">🟢 <%= t('panel.active') %></div>
+  </div>
+  <div class="panel-section">
+    <div class="panel-title"><%= t('panel.quick_links') %></div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <a href="/" style="font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px">🏠 <%= t('nav.home') %></a>
+      <a href="/calendar" style="font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px">📅 <%= t('nav.calendar') %></a>
+      <a href="/hiking-map" style="font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px">🗺️ <%= t('nav.hiking_map') %></a>
+      <% if (user) { %>
+      <a href="/messages" style="font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px">💬 <%= t('nav.messages') %></a>
+      <% } else { %>
+      <a href="/register" style="font-size:13px;color:var(--brand);display:flex;align-items:center;gap:6px">🎓 <%= t('panel.join') %></a>
+      <% } %>
+    </div>
+  </div>
+  <div class="panel-section">
+    <div class="panel-title"><%= t('panel.about') %></div>
+    <div style="font-size:12px;color:var(--text-muted);line-height:1.7"><%- t('panel.about_text') %></div>
+  </div>
+</div>
+</div>
+<script src="/main.js"></script>
+<script>
+function toggleTheme(){const h=document.documentElement,c=h.getAttribute('data-theme'),n=c==='dark'?'light':'dark';h.setAttribute('data-theme',n);localStorage.setItem('theme',n);document.querySelector('.theme-btn').textContent=n==='dark'?'☀️':'🌙';}
+const _s=localStorage.getItem('theme');if(_s){document.documentElement.setAttribute('data-theme',_s);const b=document.querySelector('.theme-btn');if(b)b.textContent=_s==='dark'?'☀️':'🌙';}
+document.addEventListener('click',e=>{if(!e.target.closest('.lang-switcher'))document.querySelectorAll('.lang-switcher.open').forEach(el=>el.classList.remove('open'));});
+<% if(user){ %>
+(function pollUnread(){fetch('/api/messages/unread-count').then(r=>r.json()).then(d=>{const b=document.querySelector('.msg-unread-badge');if(b){if(d.count>0){b.textContent=d.count;b.style.display='';}else{b.style.display='none';}}}).catch(()=>{});setTimeout(pollUnread,15000);})();
+<% } %>
+</script>
+</body></html>

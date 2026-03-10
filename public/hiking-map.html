@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>HKBU Hiking Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter','Noto Sans SC',sans-serif;background:#F2F3F5;color:#2E3338;height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:14px}
+.topbar{height:50px;background:#fff;border-bottom:1px solid #E3E5E8;display:flex;align-items:center;padding:0 18px;gap:12px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.06);z-index:1000}
+.logo{font-size:16px;font-weight:800;color:#5865F2}
+.divider{width:1px;height:20px;background:#E3E5E8}
+.tabs{margin-left:auto;display:flex;gap:5px}
+.tab-btn{padding:5px 12px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:#EBEDEF;color:#6D7680;transition:all .15s;font-family:inherit}
+.tab-btn.active{background:#5865F2;color:#fff}
+.progress-bar{background:linear-gradient(90deg,#5865F2,#7289DA);padding:7px 18px;display:flex;align-items:center;gap:14px;flex-shrink:0}
+.prog-track{flex:1;max-width:220px;background:rgba(255,255,255,.25);border-radius:99px;height:7px;overflow:hidden}
+.prog-fill{height:100%;background:#57F287;border-radius:99px;transition:width .6s}
+.prog-label{color:#fff;font-size:13px;font-weight:800}
+.badge-chip{background:rgba(255,255,255,.2);color:#fff;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+.layout{flex:1;position:relative;overflow:hidden}
+#map{position:absolute;top:0;left:0;right:330px;bottom:0;z-index:1}
+.right-panel{position:absolute;top:0;right:0;width:330px;bottom:0;background:#fff;border-left:1px solid #E3E5E8;display:flex;flex-direction:column;z-index:2;overflow:hidden}
+.right-scroll{overflow-y:auto;flex:1;padding:16px}
+.peak-hdr{padding:16px 18px;color:#fff;flex-shrink:0}
+.overlay{display:none;position:absolute;top:0;left:0;right:330px;bottom:0;background:#F2F3F5;overflow-y:auto;z-index:10;padding:18px}
+.chip{border-radius:5px;padding:3px 9px;font-size:11px;font-weight:600;display:inline-block}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;transition:all .15s;text-decoration:none;line-height:1.3}
+.btn-brand{background:#5865F2;color:#fff}.btn-brand:hover{background:#4752C4;color:#fff}
+.btn-dark{background:#2E3338;color:#fff}.btn-dark:hover{background:#111}
+.btn-ghost{background:transparent;border:1px solid #E3E5E8;color:#6D7680}.btn-ghost:hover{background:#F2F3F5}
+.btn-full{width:100%}.btn-sm{padding:5px 10px;font-size:12px}
+.btn:disabled{background:#949BA4;cursor:not-allowed}
+.section-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6D7680;margin-bottom:8px;display:block}
+.ci-box{background:#F2F3F5;border-radius:10px;padding:14px;margin-bottom:14px}
+.field-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6D7680;margin-bottom:4px;margin-top:10px;display:block}
+input[type=date],textarea,select,input[type=text]{width:100%;padding:8px 10px;border:1px solid #E3E5E8;border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:#2E3338;transition:border-color .15s}
+input[type=date]:focus,textarea:focus,select:focus,input[type=text]:focus{outline:none;border-color:#5865F2}
+textarea{resize:vertical}
+.err-msg{color:#ED4245;font-size:11px;margin-top:4px}
+.success-box{background:#d4edda;border:1px solid #c3e6cb;border-radius:10px;padding:14px;margin-bottom:14px;animation:pop .4s}
+.nav-box{background:#fff;border:1px solid #E3E5E8;border-radius:10px;overflow:hidden;margin-bottom:14px}
+.nav-hdr{padding:11px 14px;border-bottom:1px solid #E3E5E8;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.nav-step{display:flex;align-items:center;gap:8px;padding:6px 14px;font-size:12px;color:#B5BAC1;transition:all .3s}
+.nav-step.done{color:#2E3338}
+.step-dot{width:20px;height:20px;border-radius:50%;background:#EBEDEF;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#B5BAC1;flex-shrink:0;transition:all .3s}
+.step-dot.done{background:#57c96b;color:#fff}
+.ci-item{display:flex;gap:10px;padding-bottom:10px;border-bottom:1px solid #E3E5E8;margin-bottom:10px;align-items:flex-start}
+.ci-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;flex-shrink:0}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.stat-card{background:#F2F3F5;border-radius:8px;padding:12px;text-align:center}
+.stat-num{font-size:22px;font-weight:800}
+.done-peak{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#d4edda;border-radius:7px;margin-bottom:6px;cursor:pointer}
+.hint-box{text-align:center;padding:28px 16px;color:#6D7680}
+.badge-item{text-align:center;transition:opacity .4s}
+.badge-circle{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 4px;border:3px solid #E3E5E8;background:#F2F3F5;transition:all .4s}
+.badge-circle.earned{border-color:#5865F2;background:linear-gradient(135deg,#5865F2,#7289DA);box-shadow:0 0 0 4px rgba(88,101,242,.2)}
+/* Trails */
+.trail-card{background:#fff;border:1px solid #E3E5E8;border-radius:10px;overflow:hidden;margin-bottom:10px}
+/* Community */
+.sort-toggle{display:flex;gap:3px;background:#EBEDEF;border-radius:5px;padding:3px}
+.sort-btn{padding:3px 9px;border-radius:4px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:transparent;color:#6D7680;transition:all .15s;font-family:inherit}
+.sort-btn.active{background:#fff;color:#2E3338}
+.post-form-box{background:#fff;border:1px solid #E3E5E8;border-radius:10px;padding:16px;margin-bottom:14px;animation:slideIn .25s}
+.waterfall{columns:2;gap:10px}
+.post-card{break-inside:avoid;background:#fff;border:1px solid #E3E5E8;border-radius:12px;overflow:hidden;margin-bottom:10px}
+.post-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.action-btn{background:none;border:none;cursor:pointer;font-size:11px;color:#6D7680;display:inline-flex;align-items:center;gap:2px;padding:0;font-family:inherit}
+.action-btn.liked{color:#E8334A}
+.action-btn.saved{color:#F4A500}
+/* Popup */
+.leaflet-popup-content-wrapper{border-radius:10px!important;box-shadow:0 4px 20px rgba(0,0,0,.15)!important;padding:0!important;overflow:hidden}
+.leaflet-popup-content{margin:0!important;min-width:200px}
+.popup-inner{padding:14px}
+.popup-btn{display:block;width:100%;padding:8px;background:#5865F2;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;text-align:center}
+.popup-btn.done{background:#57c96b}
+@keyframes pop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:#D1D3D6;border-radius:99px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">🎓 HKBU Forum</div>
+  <div class="divider"></div>
+  <span style="font-size:14px;font-weight:700">🗺️ 香港登山打卡地图</span>
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-map"       onclick="switchTab('map')">⛰️ 山峰打卡</button>
+    <button class="tab-btn"        id="tab-trails"    onclick="switchTab('trails')">🥾 徒步路线</button>
+    <button class="tab-btn"        id="tab-community" onclick="switchTab('community')">💬 社区讨论</button>
+  </div>
+</div>
+
+<div class="progress-bar">
+  <span style="color:#fff;font-size:12px;font-weight:600">打卡进度</span>
+  <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  <span class="prog-label" id="prog-label">0 / 10</span>
+  <span class="badge-chip" id="prog-badge">点击山峰开始打卡 👇</span>
+</div>
+
+<div class="layout">
+  <div id="map"></div>
+
+  <!-- TRAILS OVERLAY -->
+  <div class="overlay" id="overlay-trails">
+    <div style="font-size:16px;font-weight:800;margin-bottom:12px">🥾 香港徒步路线</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <button class="tab-btn active" id="f-all"      onclick="setFilter('all')">全部</button>
+      <button class="tab-btn"        id="f-official" onclick="setFilter('official')">官方路径</button>
+      <button class="tab-btn"        id="f-popular"  onclick="setFilter('popular')">热门路线</button>
+    </div>
+    <div id="trails-list"></div>
+  </div>
+
+  <!-- COMMUNITY OVERLAY -->
+  <div class="overlay" id="overlay-community">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:16px;font-weight:800">💬 登山社区</div>
+        <div style="font-size:12px;color:#6D7680;margin-top:2px">小红书风格 · 双列瀑布流</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="sort-toggle">
+          <button class="sort-btn active" id="s-hot" onclick="setSortPosts('hot')">🔥 热度</button>
+          <button class="sort-btn"        id="s-new" onclick="setSortPosts('new')">🕐 最新</button>
+        </div>
+        <button class="btn btn-brand btn-sm" onclick="togglePostForm()">✏️ 发帖</button>
+      </div>
+    </div>
+    <!-- Post form -->
+    <div id="post-form" style="display:none" class="post-form-box">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px">✏️ 分享你的登山体验</div>
+      <label class="field-lbl" style="margin-top:0">选择山峰</label>
+      <select id="form-peak"></select>
+      <label class="field-lbl">帖子标题 *</label>
+      <input type="text" id="form-title" placeholder="例：今天成功登顶狮子山！">
+      <label class="field-lbl">内容（选填）</label>
+      <textarea id="form-content" rows="3" placeholder="分享路况、天气、心得…"></textarea>
+      <div id="form-err" class="err-msg" style="display:none"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-brand" onclick="submitPost()">发布</button>
+        <button class="btn btn-ghost" onclick="togglePostForm()">取消</button>
+      </div>
+    </div>
+    <div class="waterfall" id="posts-waterfall"></div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div id="peak-hdr" style="display:none" class="peak-hdr"></div>
+    <div class="right-scroll">
+      <div id="default-panel"></div>
+      <div id="peak-detail" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+var PEAKS = [
+  {id:1, zh:"大帽山", en:"Tai Mo Shan",   lat:22.4097,lng:114.1242,elev:957, diff:"Hard",   district:"新界"},
+  {id:2, zh:"狮子山", en:"Lion Rock",      lat:22.3427,lng:114.1879,elev:495, diff:"Medium", district:"九龙"},
+  {id:3, zh:"凤凰山", en:"Lantau Peak",    lat:22.2546,lng:113.9247,elev:934, diff:"Hard",   district:"大屿山"},
+  {id:4, zh:"马鞍山", en:"Ma On Shan",     lat:22.4094,lng:114.2521,elev:702, diff:"Medium", district:"新界"},
+  {id:5, zh:"飞鹅山", en:"Kowloon Peak",   lat:22.3344,lng:114.2287,elev:602, diff:"Medium", district:"九龙"},
+  {id:6, zh:"太平山", en:"Victoria Peak",  lat:22.2759,lng:114.1455,elev:552, diff:"Easy",   district:"港岛"},
+  {id:7, zh:"大东山", en:"Sunset Peak",    lat:22.2634,lng:113.9437,elev:869, diff:"Hard",   district:"大屿山"},
+  {id:8, zh:"八仙岭", en:"Pat Sin Leng",   lat:22.4946,lng:114.2234,elev:639, diff:"Hard",   district:"新界"},
+  {id:9, zh:"笔架山", en:"Beacon Hill",    lat:22.3608,lng:114.1721,elev:457, diff:"Easy",   district:"新界"},
+  {id:10,zh:"西高山", en:"High West",      lat:22.2775,lng:114.1287,elev:494, diff:"Medium", district:"港岛"},
+];
+var OTHERS = [
+  {peakId:2,user:"mountain_lover",color:"#5865F2",date:"2026-01-15",note:"远眺九龙夜景超美！"},
+  {peakId:2,user:"hkbu_alice",    color:"#57c96b",date:"2026-02-08",note:"第一次爬，腿软了但很值得😄"},
+  {peakId:6,user:"peak_hunter",   color:"#ED4245",date:"2026-01-20",note:"坐缆车上去，景色无敌！"},
+  {peakId:1,user:"trail_boss",    color:"#FFA500",date:"2025-12-25",note:"圣诞节登顶，太有纪念意义！"},
+  {peakId:3,user:"lantau_fan",    color:"#E8334A",date:"2026-02-14",note:"凌晨3点出发，日出太震撼！"},
+  {peakId:5,user:"night_hiker",   color:"#9B59B6",date:"2026-01-30",note:"飞鹅山夜景拍到手软！"},
+];
+var TRAILS = [
+  {id:1,zh:"麦理浩径",en:"MacLehose Trail",   dist:100,time:"10天",   asc:4850,diff:"Hard",  color:"#E8334A",type:"official",
+   start:{name:"北潭涌",lat:22.4032,lng:114.3420},end:{name:"屯门",lat:22.3917,lng:113.9768},
+   path:[[22.4032,114.3420],[22.4180,114.2900],[22.3900,114.2200],[22.4100,114.1500],[22.4000,114.0500],[22.3917,113.9768]],
+   desc:"香港最长官方远足径，全程100km，途经万宜水库、城门水塘等著名景点。"},
+  {id:2,zh:"凤凰径",  en:"Lantau Trail",       dist:70, time:"5天",    asc:5000,diff:"Hard",  color:"#FFA500",type:"official",
+   start:{name:"梅窝",lat:22.2681,lng:113.9957},end:{name:"梅窝(环形)",lat:22.2681,lng:113.9957},
+   path:[[22.2681,113.9957],[22.2400,113.9600],[22.2546,113.9247],[22.2634,113.9437],[22.2900,113.9700],[22.2681,113.9957]],
+   desc:"环绕大屿山，途经凤凰山(934m)、大东山(869m)，可观日出云海。"},
+  {id:3,zh:"港岛径",  en:"Hong Kong Trail",    dist:50, time:"3天",    asc:2200,diff:"Medium",color:"#57c96b",type:"official",
+   start:{name:"薄扶林",lat:22.2636,lng:114.1316},end:{name:"大浪湾",lat:22.2381,lng:114.2514},
+   path:[[22.2636,114.1316],[22.2700,114.1600],[22.2600,114.1900],[22.2500,114.2200],[22.2381,114.2514]],
+   desc:"横贯香港岛，途经大潭水塘群、紫罗兰山，适合初中级行山人士。"},
+  {id:4,zh:"卫奕信径",en:"Wilson Trail",        dist:78, time:"7天",    asc:4800,diff:"Hard",  color:"#3498DB",type:"official",
+   start:{name:"赤柱",lat:22.2189,lng:114.2137},end:{name:"南涌",lat:22.5140,lng:114.2400},
+   path:[[22.2189,114.2137],[22.2800,114.2200],[22.3400,114.2100],[22.4100,114.2300],[22.5140,114.2400]],
+   desc:"南北纵贯全港，全程78km，连接港岛南端至新界东北。"},
+  {id:5,zh:"狮子山郊游径",en:"Lion Rock Trail", dist:5.5,time:"2.5小时",asc:430, diff:"Medium",color:"#9B59B6",type:"popular",
+   start:{name:"狮子山公园",lat:22.3250,lng:114.1800},end:{name:"狮子山顶",lat:22.3427,lng:114.1879},
+   path:[[22.3250,114.1800],[22.3350,114.1840],[22.3427,114.1879]],
+   desc:"香港精神象征，登顶俯瞰九龙市区全景，最受欢迎的郊游路线之一。"},
+  {id:6,zh:"大浪湾四湾",en:"Sai Wan Four Beaches",dist:12,time:"4小时",asc:500,diff:"Medium",color:"#1ABC9C",type:"popular",
+   start:{name:"北潭坳",lat:22.3870,lng:114.3540},end:{name:"西湾",lat:22.3640,lng:114.3480},
+   path:[[22.3870,114.3540],[22.3800,114.3500],[22.3720,114.3490],[22.3640,114.3480]],
+   desc:"途经咸田湾、大湾、东湾、西湾四个沙滩，香港最美海岸徒步路线之一。"},
+];
+var BADGES=[{n:1,icon:"🌱",label:"初次登顶"},{n:3,icon:"🥾",label:"行山新手"},{n:5,icon:"⛰️",label:"峰峦探索者"},{n:8,icon:"🏆",label:"山峰达人"}];
+var DIFF={Easy:{bg:"#d4edda",text:"#155724",label:"初级"},Medium:{bg:"#fff3cd",text:"#856404",label:"中级"},Hard:{bg:"#f8d7da",text:"#721c24",label:"高级"}};
+var POST_EMOJIS=["🏔️","🦁","🌅","🌿","⛰️","🌃","🏖️","🗻","🌄","🥾"];
+var POST_COLORS=["#5865F2","#57c96b","#ED4245","#FFA500","#9B59B6","#1ABC9C","#E8334A","#3498DB"];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+var checkins=[], selectedPeak=null, navTimer=null, navActive=false;
+var currentTab="map", trailFilter="all", postSort="hot";
+var markers={}, trailLayers=[], likedPosts=[];
+var posts=[
+  {id:1,peakId:2,user:"hkbu_alice",  color:"#57c96b",emoji:"🦁", title:"今天成功登顶狮子山！第一次爬山全记录",       likes:89, saved:false,comments:23,time:"3小时前"},
+  {id:2,peakId:1,user:"trail_boss",  color:"#FFA500",emoji:"🏔️",title:"大帽山云海，人生中最美的清晨",              likes:134,saved:true, comments:41,time:"1天前"},
+  {id:3,peakId:3,user:"lantau_fan",  color:"#E8334A",emoji:"🌅", title:"凌晨3点出发爬凤凰山，日出值得一切！",        likes:215,saved:false,comments:67,time:"12小时前"},
+  {id:4,peakId:6,user:"peak_hunter", color:"#ED4245",emoji:"🌃", title:"太平山顶夜景，维港尽收眼底",               likes:72, saved:false,comments:18,time:"5小时前"},
+  {id:5,peakId:5,user:"night_hiker", color:"#9B59B6",emoji:"🌃", title:"飞鹅山夜景真的绝！带三脚架去的",            likes:96, saved:false,comments:29,time:"2天前"},
+  {id:6,peakId:4,user:"ma_on_fan",   color:"#3498DB",emoji:"⛰️", title:"马鞍山全程攻略，沙田最美后花园",            likes:58, saved:false,comments:14,time:"3天前"},
+  {id:7,peakId:8,user:"pat_hiker",   color:"#1ABC9C",emoji:"🗻", title:"八仙岭纵走！难度不低但超充实",              likes:43, saved:false,comments:9, time:"4天前"},
+  {id:8,peakId:9,user:"family_hike", color:"#E8334A",emoji:"🌄", title:"带爸妈爬笔架山，初级路线全家出动！",         likes:67, saved:true, comments:22,time:"1天前"},
+];
+
+// ── MAP ───────────────────────────────────────────────────────────────────────
+var map=L.map('map',{center:[22.35,114.10],zoom:11});
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'© <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a>',maxZoom:18
+}).addTo(map);
+
+function makeIcon(color,done,sel){
+  var sz=sel?36:done?30:24;
+  var shadow=done||sel?'0 0 0 5px '+color+'44,':'';
+  return L.divIcon({className:'',
+    html:'<div style="width:'+sz+'px;height:'+sz+'px;background:'+color+';border:3px solid #fff;border-radius:50%;box-shadow:'+shadow+'0 2px 8px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800">'+(done?'✓':'')+'</div>',
+    iconSize:[sz,sz],iconAnchor:[sz/2,sz/2],popupAnchor:[0,-sz/2]});
+}
+function peakColor(p){
+  if(checkins.indexOf(p.id)>=0)return'#57c96b';
+  if(OTHERS.some(function(o){return o.peakId===p.id;}))return'#5865F2';
+  return'#B5BAC1';
+}
+function buildPopup(peak){
+  var done=checkins.indexOf(peak.id)>=0;
+  var d=DIFF[peak.diff];
+  var cnt=OTHERS.filter(function(o){return o.peakId===peak.id;}).length;
+  return '<div class="popup-inner">'
+    +'<div style="font-size:15px;font-weight:800;margin-bottom:2px">'+peak.zh+(done?' ✅':'')+'</div>'
+    +'<div style="font-size:12px;color:#6D7680;margin-bottom:8px">'+peak.en+'</div>'
+    +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">'
+    +'<span class="chip" style="background:#F2F3F5;color:#6D7680">📍 '+peak.district+'</span>'
+    +'<span class="chip" style="background:#F2F3F5;color:#6D7680">⛰️ '+peak.elev+'m</span>'
+    +'<span class="chip" style="background:'+d.bg+';color:'+d.text+'">'+d.label+'</span>'
+    +'<span class="chip" style="background:#F2F3F5;color:#6D7680">👥 '+cnt+' 人打卡</span>'
+    +'</div>'
+    +'<button class="popup-btn'+(done?' done':'')+'" onclick="selectPeakById('+peak.id+');map.closePopup()">'
+    +(done?'✅ 已打卡 · 查看详情':'🥾 查看详情 & 打卡')+'</button></div>';
+}
+
+PEAKS.forEach(function(p){
+  var m=L.marker([p.lat,p.lng],{icon:makeIcon(peakColor(p),false,false)}).addTo(map);
+  m.bindPopup(buildPopup(p),{maxWidth:260});
+  m.on('click',function(){selectPeak(p);});
+  markers[p.id]=m;
+});
+
+// ── PEAK SELECTION ────────────────────────────────────────────────────────────
+function selectPeakById(id){
+  var p=PEAKS.find(function(x){return x.id===id;});
+  if(p)selectPeak(p);
+}
+function selectPeak(p){
+  selectedPeak=p;
+  map.flyTo([p.lat,p.lng],13,{duration:1});
+  PEAKS.forEach(function(x){
+    markers[x.id].setIcon(makeIcon(peakColor(x),checkins.indexOf(x.id)>=0,x.id===p.id));
+    markers[x.id].setPopupContent(buildPopup(x));
+  });
+  renderRight();
+}
+function deselectPeak(){
+  selectedPeak=null;
+  PEAKS.forEach(function(p){markers[p.id].setIcon(makeIcon(peakColor(p),checkins.indexOf(p.id)>=0,false));});
+  map.flyTo([22.35,114.10],11,{duration:1});
+  renderRight();
+}
+
+// ── RIGHT PANEL ───────────────────────────────────────────────────────────────
+function renderRight(){
+  var hdr=document.getElementById('peak-hdr');
+  var def=document.getElementById('default-panel');
+  var det=document.getElementById('peak-detail');
+  if(!selectedPeak){
+    hdr.style.display='none'; def.style.display='block'; det.style.display='none';
+    renderDefault(); return;
+  }
+  var p=selectedPeak, done=checkins.indexOf(p.id)>=0, d=DIFF[p.diff];
+  hdr.style.display='block';
+  hdr.style.background=done?'linear-gradient(135deg,#57c96b,#2ea854)':'linear-gradient(135deg,#5865F2,#7289DA)';
+  hdr.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+    +'<div><div style="font-size:19px;font-weight:800">'+p.zh+(done?' ✅':'')+'</div>'
+    +'<div style="font-size:12px;opacity:.85;margin:3px 0 10px">'+p.en+'</div></div>'
+    +'<button onclick="deselectPeak()" style="background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:16px;font-family:inherit">×</button>'
+    +'</div>'
+    +'<div style="display:flex;gap:7px;flex-wrap:wrap">'
+    +'<span class="chip" style="background:rgba(255,255,255,.2);color:#fff">📍 '+p.district+'</span>'
+    +'<span class="chip" style="background:rgba(255,255,255,.2);color:#fff">⛰️ '+p.elev+'m</span>'
+    +'<span class="chip" style="background:'+d.bg+';color:'+d.text+'">'+d.label+'</span>'
+    +'</div>';
+  def.style.display='none'; det.style.display='block';
+  det.innerHTML=buildDetail(p,done);
+}
+
+function buildDetail(p,done){
+  var others=OTHERS.filter(function(o){return o.peakId===p.id;});
+  var rel=posts.filter(function(x){return x.peakId===p.id;});
+  var html='<div class="nav-box">'
+    +'<div class="nav-hdr">🧭 导航至此山峰</div>'
+    +'<div id="nav-steps" style="display:none;padding:8px 0"></div>'
+    +'<div id="nav-btns" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px">'
+    +'<button class="btn btn-brand" style="flex-direction:column;gap:2px;text-align:center" onclick="startNav('+p.id+')">'
+    +'<span>📍 导航至山峰</span><span style="font-size:10px;opacity:.8;font-weight:400">Google Maps</span></button>'
+    +'<button class="btn btn-dark" style="flex-direction:column;gap:2px;text-align:center" onclick="openGMaps('+p.lat+','+p.lng+')">'
+    +'<span>🗺️ 直接打开</span><span style="font-size:10px;opacity:.7;font-weight:400">Google Maps ↗</span></button>'
+    +'</div></div>';
+
+  if(done){
+    html+='<div class="success-box">'
+      +'<div style="font-size:14px;font-weight:800;color:#155724;margin-bottom:6px">🎉 打卡成功！</div>'
+      +'<div style="font-size:12px;color:#155724;margin-bottom:3px">📍 '+p.zh+' · '+p.elev+'m</div>'
+      +'<div style="margin-top:8px;background:rgba(255,255,255,.6);border-radius:6px;padding:8px 10px;font-size:12px;color:#155724;font-weight:600">'
+      +'🏅 进度：'+checkins.length+' / '+PEAKS.length+' 座（'+Math.round(checkins.length/PEAKS.length*100)+'%）</div></div>';
+  } else {
+    html+='<div class="ci-box">'
+      +'<div style="font-size:13px;font-weight:700;margin-bottom:8px">🥾 登顶打卡</div>'
+      +'<label class="field-lbl" style="margin-top:0">登山日期 *</label>'
+      +'<input type="date" id="ci-date" max="'+new Date().toISOString().split('T')[0]+'">'
+      +'<div class="err-msg" id="ci-err" style="display:none">❗ 请选择日期</div>'
+      +'<label class="field-lbl">心得感想（选填）</label>'
+      +'<textarea id="ci-note" rows="3" placeholder="分享你的登顶体验…" style="margin-bottom:12px"></textarea>'
+      +'<button class="btn btn-brand btn-full" id="ci-btn" onclick="submitCheckin()">提交打卡 ✅</button></div>';
+  }
+
+  if(others.length){
+    html+='<span class="section-lbl">其他同学的打卡</span>';
+    others.forEach(function(c){
+      html+='<div class="ci-item">'
+        +'<div class="avatar" style="background:'+c.color+'">'+c.user[0].toUpperCase()+'</div>'
+        +'<div><div style="font-size:13px;font-weight:600">'+c.user+'</div>'
+        +'<div style="font-size:11px;color:#6D7680">📅 '+c.date+'</div>'
+        +(c.note?'<div style="font-size:12px;color:#6D7680;font-style:italic;margin-top:2px">"'+c.note+'"</div>':'')
+        +'</div></div>';
+    });
+  }
+
+  if(rel.length){
+    html+='<span class="section-lbl" style="margin-top:10px;display:block">相关讨论帖</span>';
+    rel.slice(0,2).forEach(function(x){
+      html+='<div onclick="switchTab(\'community\')" style="display:flex;gap:10px;padding:10px;background:#F2F3F5;border-radius:8px;margin-bottom:8px;cursor:pointer;align-items:center">'
+        +'<div style="width:36px;height:36px;border-radius:6px;background:'+x.color+'33;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">'+x.emoji+'</div>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+x.title+'</div>'
+        +'<div style="font-size:10px;color:#6D7680;margin-top:2px">❤️ '+x.likes+' · 💬 '+x.comments+'</div></div></div>';
+    });
+    if(rel.length>2)html+='<button onclick="switchTab(\'community\')" class="btn btn-ghost btn-full btn-sm">查看全部 '+rel.length+' 条讨论 →</button>';
+  }
+  return html;
+}
+
+function renderDefault(){
+  document.getElementById('default-panel').innerHTML=
+    '<div class="stat-grid">'
+    +'<div class="stat-card"><div class="stat-num" style="color:#57c96b">'+checkins.length+'</div><div style="font-size:11px;color:#6D7680;margin-top:2px">✅ 已打卡</div></div>'
+    +'<div class="stat-card"><div class="stat-num" style="color:#B5BAC1">'+(PEAKS.length-checkins.length)+'</div><div style="font-size:11px;color:#6D7680;margin-top:2px">🏔️ 未打卡</div></div>'
+    +'</div>'
+    +'<span class="section-lbl">成就徽章</span>'
+    +'<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">'
+    +BADGES.map(function(b){var e=checkins.length>=b.n;
+      return '<div class="badge-item" style="opacity:'+(e?1:.3)+'">'
+        +'<div class="badge-circle'+(e?' earned':'')+'">'+b.icon+'</div>'
+        +'<div style="font-size:9px;font-weight:700;color:#6D7680">'+b.label+'</div>'
+        +'<div style="font-size:9px;color:#B5BAC1">'+b.n+'+ 座</div></div>';}).join('')
+    +'</div>'
+    +(checkins.length===0
+      ?'<div class="hint-box"><div style="font-size:36px;margin-bottom:8px">⛰️</div><div style="font-size:13px;font-weight:700;color:#2E3338;margin-bottom:4px">还没有打卡记录</div><div style="font-size:12px">点击地图上的山峰开始吧！</div></div>'
+      :'<span class="section-lbl">已打卡山峰</span>'
+        +checkins.map(function(id){var p=PEAKS.find(function(x){return x.id===id;});
+          return '<div class="done-peak" onclick="selectPeakById('+id+')">'
+            +'<span style="font-size:15px">✅</span>'
+            +'<div style="flex:1"><div style="font-size:13px;font-weight:700;color:#155724">'+p.zh+'</div>'
+            +'<div style="font-size:10px;color:#155724;opacity:.7">'+p.elev+'m · '+p.district+'</div></div>'
+            +'<span style="font-size:11px;color:#155724;opacity:.6">查看 →</span></div>';}).join(''));
+}
+
+// ── CHECK-IN ──────────────────────────────────────────────────────────────────
+function submitCheckin(){
+  var date=document.getElementById('ci-date').value;
+  var err=document.getElementById('ci-err');
+  var btn=document.getElementById('ci-btn');
+  if(!date){err.style.display='block';return;}
+  err.style.display='none'; btn.disabled=true; btn.textContent='⏳ 提交中…';
+  setTimeout(function(){
+    if(checkins.indexOf(selectedPeak.id)<0)checkins.push(selectedPeak.id);
+    markers[selectedPeak.id].setIcon(makeIcon('#57c96b',true,true));
+    markers[selectedPeak.id].setPopupContent(buildPopup(selectedPeak));
+    updateProgress(); renderRight();
+  },900);
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function openGMaps(lat,lng){
+  window.open('https://www.google.com/maps/dir/?api=1&destination='+lat+','+lng+'&travelmode=transit','_blank');
+}
+function startNav(peakId){
+  if(navActive)return; navActive=true;
+  var p=PEAKS.find(function(x){return x.id===peakId;});
+  var se=document.getElementById('nav-steps'), be=document.getElementById('nav-btns');
+  be.style.display='none'; se.style.display='block';
+  var steps=['正在定位您的位置…','规划最佳交通路线…','计算前往 '+p.zh+' 的距离…','🎉 完成！点击按钮打开导航'];
+  se.innerHTML=steps.map(function(s,i){
+    return '<div class="nav-step" id="ns'+i+'"><div class="step-dot" id="nd'+i+'">'+(i+1)+'</div><span>'+s+'</span></div>';
+  }).join('')
+  +'<div id="nf" style="display:none;padding:6px 14px 10px">'
+  +'<a href="https://www.google.com/maps/dir/?api=1&destination='+p.lat+','+p.lng+'&travelmode=transit" target="_blank" class="btn btn-brand btn-full" style="margin-bottom:6px;text-decoration:none">🗺️ 在 Google Maps 中导航 ↗</a>'
+  +'<button onclick="resetNav()" class="btn btn-ghost btn-full btn-sm">← 返回</button></div>';
+  var i=0;
+  navTimer=setInterval(function(){
+    if(i<steps.length){
+      var s=document.getElementById('ns'+i),d=document.getElementById('nd'+i);
+      if(s)s.classList.add('done'); if(d){d.classList.add('done');d.textContent='✓';}
+      i++;
+    } else {
+      clearInterval(navTimer); navActive=false;
+      var f=document.getElementById('nf'); if(f)f.style.display='block';
+    }
+  },650);
+}
+function resetNav(){
+  clearInterval(navTimer); navActive=false;
+  var s=document.getElementById('nav-steps'),b=document.getElementById('nav-btns');
+  if(s)s.style.display='none'; if(b)b.style.display='grid';
+}
+
+// ── PROGRESS ──────────────────────────────────────────────────────────────────
+function updateProgress(){
+  var pct=Math.round(checkins.length/PEAKS.length*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-label').textContent=checkins.length+' / '+PEAKS.length;
+  var earned=BADGES.filter(function(b){return checkins.length>=b.n;});
+  var badge=earned[earned.length-1];
+  document.getElementById('prog-badge').textContent=badge?badge.icon+' '+badge.label:'点击山峰开始打卡 👇';
+}
+
+// ── TAB SWITCHER ──────────────────────────────────────────────────────────────
+function switchTab(tab){
+  currentTab=tab;
+  ['map','trails','community'].forEach(function(t){
+    var b=document.getElementById('tab-'+t); if(b)b.classList.toggle('active',t===tab);
+  });
+  document.getElementById('overlay-trails').style.display    =tab==='trails'   ?'block':'none';
+  document.getElementById('overlay-community').style.display =tab==='community'?'block':'none';
+  if(tab==='trails')renderTrails();
+  if(tab==='community')renderPosts();
+}
+
+// ── TRAILS ────────────────────────────────────────────────────────────────────
+function setFilter(f){
+  trailFilter=f;
+  ['all','official','popular'].forEach(function(v){
+    var b=document.getElementById('f-'+v); if(b)b.classList.toggle('active',v===f);
+  });
+  renderTrails();
+}
+function renderTrails(){
+  var list=document.getElementById('trails-list');
+  var filtered=TRAILS.filter(function(t){return trailFilter==='all'||t.type===trailFilter;});
+  list.innerHTML=filtered.map(function(t){
+    var d=DIFF[t.diff];
+    return '<div class="trail-card">'
+      +'<div style="padding:14px 18px;border-left:4px solid '+t.color+';background:linear-gradient(90deg,'+t.color+'14,transparent)">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+      +'<span style="font-size:15px;font-weight:800">'+t.zh+'</span>'
+      +'<span style="font-size:12px;color:#6D7680">'+t.en+'</span>'
+      +(t.type==='official'?'<span class="chip" style="background:#EEF0FD;color:#5865F2">官方</span>':'')
+      +'</div>'
+      +'<div style="font-size:12px;color:#6D7680;margin-bottom:10px;line-height:1.6">'+t.desc+'</div>'
+      +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'
+      +'<span class="chip" style="background:'+d.bg+';color:'+d.text+'">'+d.label+'</span>'
+      +'<span style="font-size:11px;color:#6D7680">📏 '+t.dist+'km</span>'
+      +'<span style="font-size:11px;color:#6D7680">⏱ '+t.time+'</span>'
+      +'<span style="font-size:11px;color:#6D7680">↑ '+t.asc+'m</span>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+      +'<div style="background:#F2F3F5;border-radius:6px;padding:8px 10px;font-size:12px"><div style="color:#6D7680;font-size:10px;margin-bottom:2px">起点</div><div style="font-weight:700">📍 '+t.start.name+'</div></div>'
+      +'<div style="background:#F2F3F5;border-radius:6px;padding:8px 10px;font-size:12px"><div style="color:#6D7680;font-size:10px;margin-bottom:2px">终点</div><div style="font-weight:700">🏁 '+t.end.name+'</div></div>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +'<button onclick="openGMaps('+t.start.lat+','+t.start.lng+')" class="btn btn-brand btn-sm">📍 导航至起点</button>'
+      +'<button onclick="showTrail('+t.id+')" class="btn btn-dark btn-sm">🗺️ 在地图查看</button>'
+      +'</div></div></div>';
+  }).join('');
+}
+function showTrail(id){
+  var t=TRAILS.find(function(x){return x.id===id;});
+  trailLayers.forEach(function(l){map.removeLayer(l);}); trailLayers=[];
+  var line=L.polyline(t.path,{color:t.color,weight:5,opacity:.85,dashArray:'10,5'}).addTo(map);
+  trailLayers.push(line);
+  var si=L.divIcon({className:'',html:'<div style="background:'+t.color+';color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25);font-weight:800">S</div>',iconSize:[26,26],iconAnchor:[13,13]});
+  var ei=L.divIcon({className:'',html:'<div style="background:#2E3338;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25);font-weight:800">E</div>',iconSize:[26,26],iconAnchor:[13,13]});
+  var sm=L.marker([t.start.lat,t.start.lng],{icon:si}).addTo(map);
+  var em=L.marker([t.end.lat,t.end.lng],{icon:ei}).addTo(map);
+  sm.bindPopup('<b>起点：'+t.start.name+'</b>').openPopup();
+  em.bindPopup('<b>终点：'+t.end.name+'</b>');
+  trailLayers.push(sm,em);
+  map.fitBounds(line.getBounds(),{padding:[40,40]});
+  switchTab('map');
+}
+
+// ── COMMUNITY ─────────────────────────────────────────────────────────────────
+function setSortPosts(s){
+  postSort=s;
+  document.getElementById('s-hot').classList.toggle('active',s==='hot');
+  document.getElementById('s-new').classList.toggle('active',s==='new');
+  renderPosts();
+}
+function togglePostForm(){
+  var f=document.getElementById('post-form');
+  var showing=f.style.display!=='none';
+  if(!showing){
+    var sel=document.getElementById('form-peak');
+    sel.innerHTML='<option value="">请选择山峰…</option>'
+      +PEAKS.map(function(p){return'<option value="'+p.id+'">'+p.zh+(checkins.indexOf(p.id)>=0?' ✅':'')+' ('+p.elev+'m)</option>';}).join('');
+    document.getElementById('form-title').value='';
+    document.getElementById('form-content').value='';
+    document.getElementById('form-err').style.display='none';
+  }
+  f.style.display=showing?'none':'block';
+}
+function submitPost(){
+  var peakId=parseInt(document.getElementById('form-peak').value);
+  var title=document.getElementById('form-title').value.trim();
+  var errEl=document.getElementById('form-err');
+  if(!peakId||!title){
+    errEl.textContent=!peakId?'❗ 请选择山峰':'❗ 请填写标题';
+    errEl.style.display='block'; return;
+  }
+  errEl.style.display='none';
+  posts.unshift({id:Date.now(),peakId:peakId,user:'我',
+    color:POST_COLORS[Math.floor(Math.random()*POST_COLORS.length)],
+    emoji:POST_EMOJIS[Math.floor(Math.random()*POST_EMOJIS.length)],
+    title:title,likes:0,saved:false,comments:0,time:'刚刚'});
+  document.getElementById('post-form').style.display='none';
+  renderPosts();
+}
+function toggleLike(id){
+  var p=posts.find(function(x){return x.id===id;}); if(!p)return;
+  var i=likedPosts.indexOf(id);
+  if(i>=0){likedPosts.splice(i,1);p.likes--;}else{likedPosts.push(id);p.likes++;}
+  renderPosts();
+}
+function toggleSave(id){
+  var p=posts.find(function(x){return x.id===id;}); if(!p)return;
+  p.saved=!p.saved; renderPosts();
+}
+function renderPosts(){
+  var sorted=posts.slice().sort(function(a,b){return postSort==='hot'?b.likes-a.likes:0;});
+  document.getElementById('posts-waterfall').innerHTML=sorted.map(function(p){
+    var pk=PEAKS.find(function(x){return x.id===p.peakId;})||{};
+    var liked=likedPosts.indexOf(p.id)>=0;
+    return '<div class="post-card">'
+      +'<div style="height:100px;background:linear-gradient(135deg,'+p.color+'44,'+p.color+'18);display:flex;align-items:center;justify-content:center;font-size:44px">'+p.emoji+'</div>'
+      +'<div style="padding:10px 12px">'
+      +'<div style="font-size:12px;font-weight:700;line-height:1.4;margin-bottom:5px;color:#2E3338">'+p.title+'</div>'
+      +(pk.zh?'<div style="font-size:10px;color:#5865F2;background:#EEF0FD;padding:1px 7px;border-radius:99px;display:inline-block;margin-bottom:6px">⛰️ '+pk.zh+'</div>':'')
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">'
+      +'<div style="display:flex;align-items:center;gap:5px">'
+      +'<div class="avatar" style="background:'+p.color+';width:20px;height:20px;font-size:9px">'+p.user[0].toUpperCase()+'</div>'
+      +'<span style="font-size:11px;color:#6D7680">'+p.user+'</span>'
+      +'</div>'
+      +'<span style="font-size:10px;color:#B5BAC1">'+p.time+'</span></div>'
+      +'<div style="display:flex;gap:10px;margin-top:8px">'
+      +'<button class="action-btn'+(liked?' liked':'')+'" onclick="toggleLike('+p.id+')">'+(liked?'❤️':'🤍')+' '+p.likes+'</button>'
+      +'<button class="action-btn" onclick="">💬 '+p.comments+'</button>'
+      +'<button class="action-btn'+(p.saved?' saved':'')+'" onclick="toggleSave('+p.id+')">'+(p.saved?'⭐':'☆')+' '+(p.saved?'已收藏':'收藏')+'</button>'
+      +'</div></div></div>';
+  }).join('');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderDefault();
+updateProgress();
+renderPosts();
+</script>
+</body>
+</html>

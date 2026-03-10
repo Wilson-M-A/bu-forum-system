@@ -1,0 +1,25 @@
+<%- include('partials/header', { title, pageTitle, activePage, sidebarBoards }) %>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+  <div style="font-size:18px;font-weight:700"><%= t('fav.title') %></div>
+  <a href="/" class="btn btn-secondary"><%= t('fav.back') %></a>
+</div>
+<% if (favorites.length === 0) { %>
+  <div class="empty"><div class="empty-icon">⭐</div><h3><%= t('fav.empty') %></h3><p><%= t('fav.empty_desc') %></p></div>
+<% } else { %>
+  <div class="thread-list">
+    <% favorites.forEach(f => { %>
+      <div class="thread-row">
+        <div class="avatar" style="background:<%= f.avatar_color %>"><%= f.username.charAt(0).toUpperCase() %></div>
+        <div class="thread-main">
+          <div class="thread-title-row"><a href="/thread/<%= f.id %>" class="thread-title"><%= f.title %></a></div>
+          <div class="thread-meta"><span><%= f.username %></span><span>·</span><span><%= f.board_name %></span><span>·</span><span data-time="<%= f.created_at %>"><%= f.created_at %></span></div>
+        </div>
+        <div class="thread-stats">
+          <div class="stat-item"><span class="stat-num"><%= f.reply_count %></span><span class="stat-lbl"><%= t('board.replies') %></span></div>
+          <div class="stat-item"><span class="stat-num"><%= f.like_count %></span><span class="stat-lbl"><%= t('board.likes') %></span></div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+<%- include('partials/footer') %>

@@ -1,0 +1,30 @@
+<%- include('../partials/header', { title: 'Users', pageTitle: t('admin.manage_users'), sidebarBoards: [] }) %>
+<div class="admin-layout">
+  <div class="admin-sidebar">
+    <div class="slabel"><%= t('nav.admin') %></div>
+    <a href="/admin"><%= t('admin.overview') %></a>
+    <a href="/admin/boards"><%= t('admin.boards') %></a>
+    <a href="/admin/users" class="active"><%= t('admin.users') %></a>
+    <a href="/admin/calendar"><%= t('admin.calendar') %></a>
+    <div class="slabel">Quick</div>
+    <a href="/"><%= t('admin.view_forum') %></a>
+    <a href="/logout"><%= t('admin.logout') %></a>
+  </div>
+  <div class="admin-content">
+    <div class="admin-title"><%= t('admin.manage_users') %> <span style="font-size:14px;font-weight:400;color:var(--text-muted)">(<%= users.length %><%= t('admin.total') %>)</span></div>
+    <table><thead><tr><th><%= t('admin.user') %></th><th><%= t('admin.email') %></th><th><%= t('admin.role') %></th><th><%= t('admin.posts_col') %></th><th><%= t('admin.joined') %></th><th><%= t('admin.actions') %></th></tr></thead><tbody>
+      <% users.forEach(u => { %>
+        <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="background:<%= u.avatar_color %>"><%= u.username.charAt(0).toUpperCase() %></div><span style="font-weight:600"><%= u.username %></span></div></td>
+        <td style="font-size:12px;color:var(--text-muted)"><%= u.email %></td>
+        <td><% if(u.is_admin){%><span class="badge badge-admin">Admin</span><%}else{%><span style="font-size:11px;color:var(--text-muted)"><%= t('admin.student') %></span><%}%></td>
+        <td><%= u.post_count %></td>
+        <td style="font-size:12px;color:var(--text-muted)" data-time="<%= u.created_at %>"><%= u.created_at %></td>
+        <td><% if (u.id !== user.id) { %><div style="display:flex;gap:6px">
+          <form method="POST" action="/admin/users/toggle-admin/<%= u.id %>" style="display:inline"><button class="btn btn-ghost btn-sm"><%= u.is_admin?t('admin.remove_admin'):t('admin.make_admin') %></button></form>
+          <form method="POST" action="/admin/users/delete/<%= u.id %>" style="display:inline" onsubmit="return confirm('<%= t('admin.del_user_cfm') %>')"><button class="btn btn-danger btn-sm"><%= t('admin.del') %></button></form>
+        </div><% } else { %><span style="font-size:11px;color:var(--text-muted)"><%= t('admin.you') %></span><% } %></td></tr>
+      <% }) %>
+    </tbody></table>
+  </div>
+</div>
+<%- include('../partials/footer') %>

@@ -1,0 +1,45 @@
+<%- include('../partials/header', { title: 'Admin', pageTitle: t('admin.dashboard'), sidebarBoards: [] }) %>
+<div class="admin-layout">
+  <div class="admin-sidebar">
+    <div class="slabel"><%= t('nav.admin') %></div>
+    <a href="/admin" class="active"><%= t('admin.overview') %></a>
+    <a href="/admin/boards"><%= t('admin.boards') %></a>
+    <a href="/admin/users"><%= t('admin.users') %></a>
+    <a href="/admin/calendar"><%= t('admin.calendar') %></a>
+    <div class="slabel">Quick</div>
+    <a href="/"><%= t('admin.view_forum') %></a>
+    <a href="/logout"><%= t('admin.logout') %></a>
+  </div>
+  <div class="admin-content">
+    <div class="admin-title"><%= t('admin.dashboard') %></div>
+    <div class="stat-cards">
+      <div class="stat-card"><div class="stat-card-num"><%= stats.users %></div><div class="stat-card-lbl"><%= t('admin.students_reg') %></div></div>
+      <div class="stat-card"><div class="stat-card-num"><%= stats.threads %></div><div class="stat-card-lbl"><%= t('admin.total_posts') %></div></div>
+      <div class="stat-card"><div class="stat-card-num"><%= stats.replies %></div><div class="stat-card-lbl"><%= t('admin.total_replies') %></div></div>
+      <div class="stat-card"><div class="stat-card-num"><%= stats.boards %></div><div class="stat-card-lbl"><%= t('admin.active_boards') %></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px"><%= t('admin.recent_members') %></div>
+        <table><thead><tr><th><%= t('admin.user') %></th><th><%= t('admin.joined') %></th><th><%= t('admin.role') %></th></tr></thead><tbody>
+          <% recentUsers.forEach(u => { %>
+            <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="background:<%= u.avatar_color %>;width:24px;height:24px;font-size:11px"><%= u.username.charAt(0).toUpperCase() %></div><%= u.username %></div></td>
+            <td style="color:var(--text-muted);font-size:12px" data-time="<%= u.created_at %>"><%= u.created_at %></td>
+            <td><% if(u.is_admin){%><span class="badge badge-admin">Admin</span><%}else{%><span style="font-size:11px;color:var(--text-muted)"><%= t('admin.student') %></span><%}%></td></tr>
+          <% }) %>
+        </tbody></table>
+      </div>
+      <div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px"><%= t('admin.recent_posts') %></div>
+        <table><thead><tr><th><%= t('admin.title_col') %></th><th><%= t('admin.board_col') %></th><th><%= t('admin.action') %></th></tr></thead><tbody>
+          <% recentThreads.forEach(th => { %>
+            <tr><td><a href="/thread/<%= th.id %>" style="font-size:12px"><%= th.title.length>22?th.title.substring(0,22)+'…':th.title %></a></td>
+            <td style="font-size:11px;color:var(--text-muted)"><%= th.board_name %></td>
+            <td><form method="POST" action="/admin/threads/delete/<%= th.id %>" onsubmit="return confirm('Delete?')"><button class="btn btn-danger btn-sm"><%= t('admin.del') %></button></form></td></tr>
+          <% }) %>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

@@ -1,0 +1,208 @@
+<%- include('partials/header', { title, pageTitle, activePage, sidebarBoards }) %>
+
+<div class="msg-layout">
+  <!-- Conversation list -->
+  <div class="msg-sidebar">
+    <div style="padding:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <span style="font-weight:700;font-size:14px"><%= t('msg.conversations') %></span>
+      <button class="btn btn-brand btn-sm" onclick="document.getElementById('new-conv-box').style.display=document.getElementById('new-conv-box').style.display==='none'?'block':'none'"><%= t('msg.new') %></button>
+    </div>
+    <div id="new-conv-box" style="display:none;padding:10px;border-bottom:1px solid var(--border)">
+      <form method="POST" action="/messages/new" style="display:flex;gap:6px">
+        <input type="text" name="username" placeholder="<%= t('msg.to_ph') %>" required style="flex:1;padding:6px 10px;font-size:12px" id="conv-search-input" autocomplete="off">
+        <button class="btn btn-brand btn-sm"><%= t('msg.send') %></button>
+      </form>
+      <div id="user-search-results" style="max-height:120px;overflow:auto"></div>
+    </div>
+    <div class="msg-conv-list">
+      <% if (conversations.length === 0) { %>
+        <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:12px"><%= t('msg.no_conv') %></div>
+      <% } %>
+      <% conversations.forEach(c => { %>
+        <a href="/messages/<%= c.id %>" class="msg-conv-item <%= activeConv && activeConv.id===c.id?'active':'' %>">
+          <div class="avatar" style="background:<%= c.other_color %>"><%= c.other_name.charAt(0).toUpperCase() %></div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-weight:600;font-size:13px"><%= c.other_name %></span>
+              <% if (c.unread_count > 0) { %><span class="msg-unread"><%= c.unread_count %></span><% } %>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">
+              <%= c.last_msg_type === 'image' ? '📷' : c.last_msg_type === 'video' ? '🎬' : c.last_msg_type === 'voice' ? '🎤' : '' %>
+              <%= c.last_msg ? (c.last_msg.length > 30 ? c.last_msg.substring(0,30)+'…' : c.last_msg) : '' %>
+            </div>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+  <!-- Chat area -->
+  <div class="msg-chat">
+    <% if (!activeConv) { %>
+      <div class="empty" style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div class="empty-icon">💬</div>
+        <h3><%= t('msg.select_conv') %></h3>
+      </div>
+    <% } else { %>
+      <div class="msg-chat-header">
+        <div class="avatar" style="background:<%= activeConv.other_color %>"><%= activeConv.other_name.charAt(0).toUpperCase() %></div>
+        <span style="font-weight:700;font-size:14px"><%= activeConv.other_name %></span>
+      </div>
+      <div class="msg-messages" id="msg-messages">
+        <% messages.forEach(m => { %>
+          <div class="msg-bubble <%= m.sender_id === user.id ? 'msg-mine' : 'msg-theirs' %>">
+            <% if (m.sender_id !== user.id) { %><div class="avatar" style="background:<%= m.avatar_color %>;width:28px;height:28px;font-size:11px;flex-shrink:0"><%= m.username.charAt(0).toUpperCase() %></div><% } %>
+            <div class="msg-content-wrap">
+              <% if (m.msg_type === 'text') { %>
+                <div class="msg-text"><%= m.content %></div>
+              <% } else if (m.msg_type === 'image') { %>
+                <div class="msg-media"><img src="<%= m.file_path %>" alt="image" style="max-width:260px;border-radius:8px;cursor:pointer" onclick="window.open(this.src)"></div>
+              <% } else if (m.msg_type === 'video') { %>
+                <div class="msg-media"><video src="<%= m.file_path %>" controls style="max-width:280px;border-radius:8px"></video></div>
+              <% } else if (m.msg_type === 'voice') { %>
+                <div class="msg-voice"><%= t('msg.voice_msg') %><br><audio src="<%= m.file_path %>" controls style="margin-top:6px;width:200px;height:32px"></audio></div>
+              <% } %>
+              <div class="msg-time" data-time="<%= m.created_at %>"><%= m.created_at %></div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+      <div class="msg-input-area">
+        <div class="msg-toolbar">
+          <label class="msg-tool-btn" title="<%= t('msg.upload_image') %>">📷<input type="file" accept="image/*" style="display:none" onchange="sendFile(this,'image')"></label>
+          <label class="msg-tool-btn" title="<%= t('msg.upload_video') %>">🎬<input type="file" accept="video/*" style="display:none" onchange="sendFile(this,'video')"></label>
+          <button class="msg-tool-btn" id="voice-btn" title="<%= t('msg.record_voice') %>" onclick="toggleVoice()">🎤</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="msg-input" placeholder="<%= t('msg.type_msg') %>" style="flex:1;padding:10px 14px;border-radius:20px" onkeydown="if(event.key==='Enter')sendText()">
+          <button class="btn btn-brand" style="border-radius:20px;padding:10px 20px" onclick="sendText()"><%= t('msg.send') %></button>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<% if (activeConv) { %>
+<script>
+var CONV_ID = <%= activeConv.id %>;
+var MY_ID = <%= user.id %>;
+var lastMsgCount = document.querySelectorAll('.msg-bubble').length;
+
+// Scroll to bottom
+var mc = document.getElementById('msg-messages');
+if (mc) mc.scrollTop = mc.scrollHeight;
+
+// Send text
+function sendText() {
+  var input = document.getElementById('msg-input');
+  var text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  fetch('/messages/' + CONV_ID + '/send', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ content: text, msg_type: 'text' })
+  }).then(() => pollMessages());
+}
+
+// Send file (image/video)
+function sendFile(input, type) {
+  var file = input.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function() {
+    var base64 = reader.result.split(',')[1];
+    var ext = file.name.split('.').pop();
+    fetch('/messages/' + CONV_ID + '/send', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ content: file.name, msg_type: type, file_data: base64, file_ext: ext })
+    }).then(() => pollMessages());
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+// Voice recording
+var mediaRecorder, audioChunks = [], isRecording = false;
+function toggleVoice() {
+  var btn = document.getElementById('voice-btn');
+  if (isRecording) {
+    mediaRecorder.stop(); isRecording = false;
+    btn.textContent = '🎤'; btn.style.color = '';
+  } else {
+    navigator.mediaDevices.getUserMedia({audio:true}).then(stream => {
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        stream.getTracks().forEach(t => t.stop());
+        var blob = new Blob(audioChunks, {type:'audio/webm'});
+        var reader = new FileReader();
+        reader.onload = function() {
+          var base64 = reader.result.split(',')[1];
+          fetch('/messages/' + CONV_ID + '/send', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({content:'<%= t("msg.voice_msg") %>',msg_type:'voice',file_data:base64,file_ext:'webm'})
+          }).then(() => pollMessages());
+        };
+        reader.readAsDataURL(blob);
+      };
+      mediaRecorder.start(); isRecording = true;
+      btn.textContent = '🔴'; btn.style.color = '#ED4245';
+    }).catch(() => alert('Microphone access denied'));
+  }
+}
+
+// Poll for new messages
+function pollMessages() {
+  fetch('/api/messages/' + CONV_ID).then(r => r.json()).then(msgs => {
+    if (msgs.length !== lastMsgCount) {
+      lastMsgCount = msgs.length;
+      var container = document.getElementById('msg-messages');
+      var lang = document.documentElement.lang || 'zh-CN';
+      container.innerHTML = msgs.map(m => {
+        var mine = m.sender_id === MY_ID;
+        var html = '<div class="msg-bubble ' + (mine ? 'msg-mine' : 'msg-theirs') + '">';
+        if (!mine) html += '<div class="avatar" style="background:' + m.avatar_color + ';width:28px;height:28px;font-size:11px;flex-shrink:0">' + m.username.charAt(0).toUpperCase() + '</div>';
+        html += '<div class="msg-content-wrap">';
+        if (m.msg_type === 'text') html += '<div class="msg-text">' + escHtml(m.content) + '</div>';
+        else if (m.msg_type === 'image') html += '<div class="msg-media"><img src="' + m.file_path + '" style="max-width:260px;border-radius:8px;cursor:pointer" onclick="window.open(this.src)"></div>';
+        else if (m.msg_type === 'video') html += '<div class="msg-media"><video src="' + m.file_path + '" controls style="max-width:280px;border-radius:8px"></video></div>';
+        else if (m.msg_type === 'voice') html += '<div class="msg-voice"><%= t("msg.voice_msg") %><br><audio src="' + m.file_path + '" controls style="margin-top:6px;width:200px;height:32px"></audio></div>';
+        html += '<div class="msg-time">' + timeAgo(m.created_at) + '</div></div></div>';
+        return html;
+      }).join('');
+      container.scrollTop = container.scrollHeight;
+    }
+  }).catch(() => {});
+  setTimeout(pollMessages, 3000);
+}
+function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function timeAgo(ds) {
+  var lang = '<%= lang %>';
+  var now = new Date(), date = new Date(ds + (ds.includes('Z') ? '' : ' UTC+8'));
+  var diff = Math.floor((now - date) / 1000);
+  var t = {'zh-CN':['刚刚',' 分钟前',' 小时前',' 天前'],'zh-TW':['剛剛',' 分鐘前',' 小時前',' 天前'],en:['just now','m ago','h ago','d ago']}[lang]||['just now','m ago','h ago','d ago'];
+  if (diff < 60) return t[0]; if (diff < 3600) return Math.floor(diff/60)+t[1]; if (diff < 86400) return Math.floor(diff/3600)+t[2]; if (diff < 2592000) return Math.floor(diff/86400)+t[3];
+  return date.toLocaleDateString();
+}
+setTimeout(pollMessages, 3000);
+</script>
+<% } %>
+
+<script>
+// User search
+var si = document.getElementById('conv-search-input');
+if (si) { var debounce; si.addEventListener('input', function() {
+  clearTimeout(debounce);
+  debounce = setTimeout(function(){
+    var q = si.value.trim();
+    if (q.length < 1) { document.getElementById('user-search-results').innerHTML = ''; return; }
+    fetch('/api/users/search?q=' + encodeURIComponent(q)).then(r=>r.json()).then(users => {
+      document.getElementById('user-search-results').innerHTML = users.map(u =>
+        '<div style="padding:6px 8px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:12px;border-radius:4px" onmouseover="this.style.background=\'var(--bg-modifier)\'" onmouseout="this.style.background=\'\'" onclick="document.querySelector(\'[name=username]\').value=\'' + u.username + '\';document.getElementById(\'user-search-results\').innerHTML=\'\'">'
+        + '<div class="avatar" style="background:' + u.avatar_color + ';width:22px;height:22px;font-size:10px">' + u.username.charAt(0).toUpperCase() + '</div>' + u.username + '</div>'
+      ).join('');
+    });
+  }, 300);
+}); }
+</script>
+
+<%- include('partials/footer') %>

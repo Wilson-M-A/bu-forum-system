@@ -1,0 +1,21 @@
+<!DOCTYPE html><html lang="<%= lang %>" data-theme="light"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Register · HKBU Forum</title><link rel="stylesheet" href="/style.css"></head><body>
+<div class="auth-page"><div class="auth-card">
+  <div style="text-align:center;margin-bottom:20px"><div style="font-size:40px">🎓</div><h1><%= t('reg.title') %></h1><p class="subtitle"><%= t('reg.subtitle') %></p></div>
+  <div class="info-msg"><%= t('reg.email_notice') %></div>
+  <% if (error) { %><div class="error-msg"><%= error %></div><% } %>
+  <form method="POST" action="/register">
+    <div class="form-group"><label><%= t('reg.username') %></label><input type="text" name="username" placeholder="<%= t('reg.username_ph') %>" minlength="2" maxlength="20" required autofocus></div>
+    <div class="form-group"><label><%= t('reg.email') %></label><input type="email" name="email" placeholder="<%= t('reg.email_ph') %>" required></div>
+    <div class="form-group"><label><%= t('reg.password') %></label><input type="password" name="password" placeholder="<%= t('reg.password_ph') %>" minlength="6" required></div>
+    <div class="form-group"><label><%= t('reg.confirm') %></label><input type="password" name="confirm" placeholder="<%= t('reg.confirm_ph') %>" required></div>
+    <button type="submit" class="btn btn-brand" style="width:100%;justify-content:center;padding:11px"><%= t('reg.submit') %></button>
+  </form>
+  <p style="text-align:center;margin-top:20px;font-size:13px;color:var(--text-muted)"><%= t('reg.has_account') %><a href="/login"><%= t('nav.login') %></a></p>
+  <div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center">
+    <a href="/set-lang/zh-CN" style="font-size:12px;color:var(--text-muted);text-decoration:<%= lang==='zh-CN'?'underline':'none' %>">简体中文</a>
+    <a href="/set-lang/zh-TW" style="font-size:12px;color:var(--text-muted);text-decoration:<%= lang==='zh-TW'?'underline':'none' %>">繁體中文</a>
+    <a href="/set-lang/en" style="font-size:12px;color:var(--text-muted);text-decoration:<%= lang==='en'?'underline':'none' %>">English</a>
+  </div>
+</div></div>
+<script>const s=localStorage.getItem('theme');if(s)document.documentElement.setAttribute('data-theme',s);</script>
+</body></html>

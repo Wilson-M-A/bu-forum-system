@@ -1,0 +1,38 @@
+<%- include('partials/header', { title, pageTitle, sidebarBoards }) %>
+
+<div style="max-width:720px">
+  <div class="breadcrumb">
+    <a href="/"><%= t('thread.home') %></a><span class="sep">›</span>
+    <a href="/board/<%= board.id %>"><%= board.icon %> <%= board.name %></a><span class="sep">›</span>
+    <span><%= t('nt.new_post') %></span>
+  </div>
+
+  <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px">
+    <h1 style="font-size:18px;font-weight:700;margin-bottom:20px"><%= t('nt.title_in') %><%= board.name %></h1>
+    <% if (typeof error !== 'undefined' && error) { %><div class="error-msg"><%= error %></div><% } %>
+    <form method="POST" action="/new-thread/<%= board.id %>">
+      <div class="form-group"><label><%= t('nt.post_title') %></label><input type="text" name="title" placeholder="<%= t('nt.title_ph') %>" maxlength="100" required></div>
+      <div class="form-group"><label><%= t('nt.content') %></label><textarea name="content" rows="10" placeholder="<%= t('nt.content_ph') %>" required style="min-height:200px"></textarea></div>
+
+      <!-- Calendar option -->
+      <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:14px;font-weight:600;letter-spacing:0;color:var(--text-normal);margin-bottom:0">
+          <input type="checkbox" name="add_to_calendar" value="1" id="cal-check" onchange="document.getElementById('cal-fields').style.display=this.checked?'grid':'none'" style="width:auto">
+          <%= t('nt.add_calendar') %>
+        </label>
+        <div id="cal-fields" style="display:none;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+          <div class="form-group" style="margin:0"><label><%= t('nt.event_date') %></label><input type="date" name="event_date"></div>
+          <div class="form-group" style="margin:0"><label><%= t('nt.event_time') %></label><input type="time" name="event_time"></div>
+          <div class="form-group" style="margin:0;grid-column:1/-1"><label><%= t('nt.event_location') %></label><input type="text" name="event_location" placeholder="<%= t('nt.event_location_ph') %>"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button type="submit" class="btn btn-brand"><%= t('nt.publish') %></button>
+        <a href="/board/<%= board.id %>" class="btn btn-secondary"><%= t('nt.cancel') %></a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,46 @@
+<%- include('../partials/header', { title: 'Calendar', pageTitle: t('admin.manage_calendar'), sidebarBoards: [] }) %>
+<div class="admin-layout">
+  <div class="admin-sidebar">
+    <div class="slabel"><%= t('nav.admin') %></div>
+    <a href="/admin"><%= t('admin.overview') %></a>
+    <a href="/admin/boards"><%= t('admin.boards') %></a>
+    <a href="/admin/users"><%= t('admin.users') %></a>
+    <a href="/admin/calendar" class="active"><%= t('admin.calendar') %></a>
+    <div class="slabel">Quick</div>
+    <a href="/"><%= t('admin.view_forum') %></a>
+    <a href="/logout"><%= t('admin.logout') %></a>
+  </div>
+  <div class="admin-content">
+    <div class="admin-title"><%= t('admin.manage_calendar') %></div>
+    <% if (msg==='created') { %><div style="background:var(--brand-light);border:1px solid rgba(88,101,242,.3);color:var(--brand);padding:10px 14px;border-radius:var(--r-sm);margin-bottom:16px;font-size:13px">✅ Event created</div><% } %>
+    <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:14px"><%= t('admin.new_event') %></div>
+      <form method="POST" action="/admin/calendar/create">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div class="form-group"><label><%= t('admin.event_title') %></label><input type="text" name="title" required></div>
+          <div class="form-group"><label><%= t('admin.event_date') %></label><input type="date" name="event_date" required></div>
+          <div class="form-group"><label><%= t('admin.event_time') %></label><input type="time" name="event_time"></div>
+          <div class="form-group"><label><%= t('admin.event_location') %></label><input type="text" name="location"></div>
+        </div>
+        <div class="form-group"><label><%= t('admin.event_desc') %></label><textarea name="description" rows="3"></textarea></div>
+        <button type="submit" class="btn btn-brand"><%= t('admin.create') %></button>
+      </form>
+    </div>
+    <table>
+      <thead><tr><th><%= t('admin.event_title') %></th><th><%= t('admin.event_date') %></th><th><%= t('admin.event_time') %></th><th><%= t('admin.event_location') %></th><th><%= t('admin.user') %></th><th><%= t('admin.action') %></th></tr></thead>
+      <tbody>
+        <% events.forEach(ev => { %>
+          <tr>
+            <td style="font-weight:600"><%= ev.title %></td>
+            <td><%= ev.event_date %></td>
+            <td><%= ev.event_time || '—' %></td>
+            <td><%= ev.location || '—' %></td>
+            <td style="font-size:12px;color:var(--text-muted)"><%= ev.username %></td>
+            <td><form method="POST" action="/admin/calendar/delete/<%= ev.id %>" onsubmit="return confirm('<%= t('admin.del_event_cfm') %>')"><button class="btn btn-danger btn-sm"><%= t('admin.del') %></button></form></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../partials/footer') %>

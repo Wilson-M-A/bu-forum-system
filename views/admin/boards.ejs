@@ -1,0 +1,81 @@
+<%- include('../partials/header', { title: 'Boards', pageTitle: t('admin.manage_boards'), sidebarBoards: [] }) %>
+<div class="admin-layout">
+  <div class="admin-sidebar">
+    <div class="slabel"><%= t('nav.admin') %></div>
+    <a href="/admin"><%= t('admin.overview') %></a>
+    <a href="/admin/boards" class="active"><%= t('admin.boards') %></a>
+    <a href="/admin/users"><%= t('admin.users') %></a>
+    <a href="/admin/calendar"><%= t('admin.calendar') %></a>
+    <div class="slabel">Quick</div>
+    <a href="/"><%= t('admin.view_forum') %></a>
+    <a href="/logout"><%= t('admin.logout') %></a>
+  </div>
+  <div class="admin-content">
+    <div class="admin-title"><%= t('admin.manage_boards') %></div>
+    <% if (msg==='created') { %><div style="background:var(--brand-light);border:1px solid rgba(88,101,242,.3);color:var(--brand);padding:10px 14px;border-radius:var(--r-sm);margin-bottom:16px;font-size:13px"><%= t('admin.board_created') %></div><% } %>
+
+    <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:14px"><%= t('admin.new_board') %></div>
+      <form method="POST" action="/admin/boards/create">
+        <!-- Row 1: Icon -->
+        <div style="margin-bottom:10px">
+          <div class="form-group" style="margin:0;width:120px">
+            <label><%= t('admin.icon') %></label>
+            <input type="text" name="icon" placeholder="💬" value="💬" style="width:100%">
+          </div>
+        </div>
+
+        <!-- Row 2: Name in 3 languages -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+          <div class="form-group" style="margin:0">
+            <label>简体中文名称 *</label>
+            <input type="text" name="name" placeholder="例：💬 综合讨论" required>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>繁體中文名稱</label>
+            <input type="text" name="name_zh_tw" placeholder="例：💬 綜合討論">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>English Name</label>
+            <input type="text" name="name_en" placeholder="e.g. 💬 General Discussion">
+          </div>
+        </div>
+
+        <!-- Row 3: Description in 3 languages -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+          <div class="form-group" style="margin:0">
+            <label>简体中文描述</label>
+            <input type="text" name="description" placeholder="自由讨论，无特定主题">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>繁體中文描述</label>
+            <input type="text" name="desc_zh_tw" placeholder="自由討論，無特定主題">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>English Description</label>
+            <input type="text" name="desc_en" placeholder="Free discussion, no specific topic">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-brand"><%= t('admin.create') %></button>
+      </form>
+    </div>
+
+    <table>
+      <thead><tr><th><%= t('admin.icon') %></th><th>简中</th><th>繁中</th><th>EN</th><th><%= t('admin.posts_col') %></th><th><%= t('admin.action') %></th></tr></thead>
+      <tbody>
+        <% boards.forEach(b => { %>
+          <tr>
+            <td style="font-size:20px"><%= b.icon %></td>
+            <td><div style="font-weight:600;font-size:13px"><%= b.name %></div><div style="font-size:11px;color:var(--text-muted)"><%= b.description||'—' %></div></td>
+            <td><div style="font-weight:600;font-size:13px"><%= b.name_zh_tw||'—' %></div><div style="font-size:11px;color:var(--text-muted)"><%= b.desc_zh_tw||'—' %></div></td>
+            <td><div style="font-weight:600;font-size:13px"><%= b.name_en||'—' %></div><div style="font-size:11px;color:var(--text-muted)"><%= b.desc_en||'—' %></div></td>
+            <td><%= b.thread_count %></td>
+            <td><form method="POST" action="/admin/boards/delete/<%= b.id %>" onsubmit="return confirm('<%= t('admin.del_board_cfm') %>')"><button class="btn btn-danger btn-sm"><%= t('admin.del') %></button></form></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('../partials/footer') %>
